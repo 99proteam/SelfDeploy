@@ -1,0 +1,20 @@
+# Alternative to install.sh: `docker compose up -d`, then open http://<server-ip>:8000
+services:
+  selfdeploy:
+    image: ghcr.io/99proteam/selfdeploy:latest
+    container_name: selfdeploy
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      SELFDEPLOY_DATA: /data/selfdeploy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Keep the same path inside and outside the container.
+      - /data/selfdeploy:/data/selfdeploy
+    networks:
+      - selfdeploy
+
+networks:
+  selfdeploy:
+    name: selfdeploy
