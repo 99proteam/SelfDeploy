@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="web/static/favicon.svg" width="72" alt="SelfDeploy logo">
+  <img src="docs/logo.svg" width="96" alt="SelfDeploy logo">
 </p>
 
 <h1 align="center">SelfDeploy</h1>
