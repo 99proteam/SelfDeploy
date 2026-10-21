@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SelfDeploy: open-source self-hosted PaaS (Heroku, Vercel and Coolify alternative)</title>
+  <meta name="description" content="SelfDeploy is a free, open-source, self-hosted PaaS. Git push to deploy, automatic Let's Encrypt SSL, custom domains, databases with backups, your own email server and one-click apps on any Linux VPS.">
+  <meta name="keywords" content="self-hosted PaaS, open source PaaS, Heroku alternative, Vercel alternative, Netlify alternative, Coolify alternative, Dokku alternative, CapRover alternative, git push deploy, docker deployment, VPS control panel, free SSL, Let's Encrypt, custom domains, self-hosted email server, database backups, Nixpacks, Traefik">
+  <meta name="author" content="99proteam">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://99proteam.github.io/SelfDeploy/">
+  <link rel="icon" href="logo.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#6366f1">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="SelfDeploy">
+  <meta property="og:title" content="SelfDeploy: open-source, self-hosted PaaS">
+  <meta property="og:description" content="Git push to deploy, automatic SSL, custom domains, databases, email server and one-click apps on your own server. One command to install.">
+  <meta property="og:url" content="https://99proteam.github.io/SelfDeploy/">
+  <meta property="og:image" content="https://99proteam.github.io/SelfDeploy/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta property="og:image:alt" content="SelfDeploy: your own Heroku on any VPS">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SelfDeploy: open-source, self-hosted PaaS">
+  <meta name="twitter:description" content="Git push to deploy, automatic SSL, custom domains, databases, email server and one-click apps on your own server.">
+  <meta name="twitter:image" content="https://99proteam.github.io/SelfDeploy/social-preview.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "SelfDeploy",
+    "description": "Open-source, self-hosted Platform-as-a-Service: git auto-deploy, automatic SSL, custom domains, databases with backups, email server and one-click apps.",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Linux",
+    "url": "https://99proteam.github.io/SelfDeploy/",
+    "downloadUrl": "https://github.com/99proteam/SelfDeploy",
+    "codeRepository": "https://github.com/99proteam/SelfDeploy",
+    "license": "https://opensource.org/licenses/MIT",
+    "programmingLanguage": "Go",
+    "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type": "Question", "name": "Is SelfDeploy free?",
+       "acceptedAnswer": {"@type": "Answer", "text": "Yes. SelfDeploy is open source under the MIT license. You only pay for your own server."}},
+      {"@type": "Question", "name": "How does SSL work in SelfDeploy?",
+       "acceptedAnswer": {"@type": "Answer", "text": "SelfDeploy runs Traefik, which requests a free Let's Encrypt certificate for every domain you add, renews it automatically and redirects HTTP to HTTPS. Point an A record at your server and make sure ports 80 and 443 are open."}},
+      {"@type": "Question", "name": "Can I use my own domain?",
+       "acceptedAnswer": {"@type": "Answer", "text": "Yes. Add any number of custom domains to an app, or set a wildcard domain so every new app gets name.apps.example.com automatically. Every app also gets a free sslip.io URL that works without DNS."}},
+      {"@type": "Question", "name": "What can I deploy?",
+       "acceptedAnswer": {"@type": "Answer", "text": "Anything with a Dockerfile or Docker Compose file, any Docker image, static sites and SPAs, and Node.js, Python, Go, PHP, Ruby, Rust, Java, .NET and more through Nixpacks without a Dockerfile."}},
+      {"@type": "Question", "name": "What server do I need?",
+       "acceptedAnswer": {"@type": "Answer", "text": "Any Ubuntu or Debian VPS with 1 GB of RAM (2 GB or more recommended). The installer sets up Docker for you."}}
+    ]
+  }
+  </script>
+  <style>
+    :root { --bg:#ffffff; --fg:#0f172a; --muted:#475569; --card:#f8fafc; --line:#e2e8f0; --brand:#6366f1; --brand2:#8b5cf6; --code:#0f172a; --codefg:#e2e8f0; }
+    @media (prefers-color-scheme: dark) { :root { --bg:#0b1020; --fg:#e2e8f0; --muted:#94a3b8; --card:#121a2e; --line:#1e293b; --code:#020617; } }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+    a { color:var(--brand); }
+    .wrap { max-width:1040px; margin:0 auto; padding:0 20px; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:18px 0; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:18px; color:var(--fg); text-decoration:none; }
+    .brand img { width:32px; height:32px; }
+    nav a { margin-left:18px; color:var(--muted); text-decoration:none; font-size:15px; }
+    .hero { text-align:center; padding:56px 0 40px; }
+    .hero h1 { font-size:clamp(32px,5vw,52px); line-height:1.1; margin:0 0 16px; letter-spacing:-.02em; }
+    .hero h1 span { background:linear-gradient(90deg,var(--brand),var(--brand2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .hero p { font-size:19px; color:var(--muted); max-width:680px; margin:0 auto 28px; }
+    pre { background:var(--code); color:var(--codefg); padding:16px 18px; border-radius:10px; overflow-x:auto; text-align:left; font:14px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace; margin:0; }
+    .install { max-width:760px; margin:0 auto; }
+    .cta { margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+    .btn { display:inline-block; padding:11px 20px; border-radius:8px; font-weight:600; text-decoration:none; border:1px solid var(--line); color:var(--fg); }
+    .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+    section { padding:44px 0; }
+    h2 { font-size:28px; margin:0 0 20px; letter-spacing:-.01em; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:16px; }
+    .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+    .card h3 { margin:0 0 6px; font-size:17px; }
+    .card p { margin:0; color:var(--muted); font-size:15px; }
+    ol li { margin-bottom:8px; }
+    details { border-bottom:1px solid var(--line); padding:12px 0; }
+    summary { cursor:pointer; font-weight:600; }
+    details p { color:var(--muted); margin:8px 0 0; }
+    footer { border-top:1px solid var(--line); padding:28px 0; color:var(--muted); font-size:14px; text-align:center; }
+    @media (max-width:600px) { nav a:not(:last-child) { display:none; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="brand" href="./"><img src="logo.svg" alt="SelfDeploy logo">SelfDeploy</a>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#domains">Domains &amp; SSL</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/99proteam/SelfDeploy">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>Your own <span>Heroku</span>, on your own server</h1>
+        <p>SelfDeploy is a free, open-source, self-hosted PaaS. Push to Git and your app is built, deployed with zero downtime and served over HTTPS, with databases, backups, email and one-click apps included.</p>
+        <div class="install">
+          <pre><code>curl -fsSL https://raw.githubusercontent.com/99proteam/selfdeploy/main/install.sh | sudo bash</code></pre>
+        </div>
+        <div class="cta">
+          <a class="btn primary" href="https://github.com/99proteam/SelfDeploy">View on GitHub</a>
+          <a class="btn" href="https://github.com/99proteam/SelfDeploy#-quick-start">Read the docs</a>
+        </div>
+      </div>
+
+      <section id="features">
+        <h2>Everything you need to ship</h2>
+        <div class="grid">
+          <div class="card"><h3>Git push to deploy</h3><p>GitHub, GitLab, Gitea/Forgejo and Bitbucket webhooks, private repos, monorepos and preview deployments per pull request.</p></div>
+          <div class="card"><h3>Any stack</h3><p>Dockerfile, Docker Compose, any image, static sites and SPAs, or Node.js, Python, Go, PHP, Ruby, Rust, Java and .NET via Nixpacks.</p></div>
+          <div class="card"><h3>Automatic SSL</h3><p>Free Let's Encrypt certificates for every domain, issued and renewed automatically, with HTTP to HTTPS redirects.</p></div>
+          <div class="card"><h3>Custom &amp; wildcard domains</h3><p>Several domains per app, a wildcard domain for new apps, and a free sslip.io URL that works before you touch DNS.</p></div>
+          <div class="card"><h3>Zero downtime &amp; rollback</h3><p>New versions must pass a health check before traffic switches. Roll back to any earlier build in seconds.</p></div>
+          <div class="card"><h3>Databases &amp; backups</h3><p>PostgreSQL, MySQL, MariaDB, MongoDB and Redis in one click, with scheduled backups to any S3-compatible storage.</p></div>
+          <div class="card"><h3>Email server</h3><p>SMTP, IMAP, DKIM, SPF, DMARC and spam filtering for your domains, with the exact DNS records shown for you.</p></div>
+          <div class="card"><h3>One-click apps</h3><p>WordPress, Ghost, n8n, Uptime Kuma, Gitea, Vaultwarden, Umami, Nextcloud, Grafana and more.</p></div>
+          <div class="card"><h3>Light &amp; simple</h3><p>One Go binary with SQLite and an embedded dashboard, using about 20 MB of RAM. Manage remote servers over SSH.</p></div>
+        </div>
+      </section>
+
+      <section id="domains">
+        <h2>Custom domains and HTTPS, built in</h2>
+        <ol>
+          <li>Create an <code>A</code> record for <code>app.example.com</code> pointing to your server's IP.</li>
+          <li>Add <code>https://app.example.com</code> to the app and redeploy.</li>
+          <li>The certificate is issued within a minute and renews automatically. Ports 80 and 443 must be open.</li>
+        </ol>
+        <p>For many apps, add a wildcard record <code>*.apps.example.com</code> once and every new app gets its own HTTPS subdomain.</p>
+      </section>
+
+      <section id="faq">
+        <h2>FAQ</h2>
+        <details><summary>Is SelfDeploy free?</summary><p>Yes. It is open source under the MIT license. You only pay for your own server.</p></details>
+        <details><summary>How is it different from Heroku, Vercel or Netlify?</summary><p>It runs on a server you control, so there are no per-app fees, usage limits or vendor lock-in, and your data stays with you.</p></details>
+        <details><summary>What server do I need?</summary><p>Any Ubuntu or Debian VPS with 1 GB of RAM (2 GB or more recommended). The installer sets up Docker for you.</p></details>
+        <details><summary>How does SSL work?</summary><p>SelfDeploy runs the Traefik proxy, which requests a free Let's Encrypt certificate for each domain over the HTTP-01 challenge and renews it before it expires.</p></details>
+        <details><summary>Can I host email?</summary><p>Yes, with the built-in mail server. Many cloud providers block outbound port 25 by default, so ask them to unblock it or relay through an SMTP provider.</p></details>
+      </section>
+    </main>
+  </div>
+  <footer>
+    <div class="wrap">SelfDeploy is MIT licensed. <a href="https://github.com/99proteam/SelfDeploy">Source on GitHub</a> · <a href="https://github.com/99proteam/SelfDeploy/issues">Report an issue</a></div>
+  </footer>
+</body>
+</html>

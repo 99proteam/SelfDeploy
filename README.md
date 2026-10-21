@@ -2,7 +2,7 @@
   <img src="docs/logo.svg" width="96" alt="SelfDeploy logo">
 </p>
 
-<h1 align="center">SelfDeploy</h1>
+<h1 align="center">SelfDeploy: open-source, self-hosted PaaS</h1>
 
 <p align="center">
   <b>Open-source, self-hosted PaaS.</b> Git auto-deploy, automatic SSL, custom domains, databases, your own email server and one-click apps, all on your own server.
@@ -11,11 +11,20 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/99proteam/SelfDeploy/actions/workflows/ci.yml"><img src="https://github.com/99proteam/SelfDeploy/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/99proteam/SelfDeploy" alt="MIT license"></a>
+  <a href="https://github.com/99proteam/SelfDeploy/pkgs/container/selfdeploy"><img src="https://img.shields.io/badge/docker-ghcr.io%2F99proteam%2Fselfdeploy-2496ED?logo=docker&logoColor=white" alt="Docker image"></a>
+  <a href="https://github.com/99proteam/SelfDeploy/stargazers"><img src="https://img.shields.io/github/stars/99proteam/SelfDeploy?style=flat" alt="GitHub stars"></a>
+</p>
+
+<p align="center">
+  <a href="https://99proteam.github.io/SelfDeploy/">Website</a> ·
   <a href="#-quick-start">Quick start</a> ·
   <a href="#-features">Features</a> ·
   <a href="#-deploying-apps">Deploying apps</a> ·
   <a href="#-email-server">Email server</a> ·
-  <a href="#-api">API</a>
+  <a href="#-api">API</a> ·
+  <a href="#-faq">FAQ</a>
 </p>
 
 ---
@@ -74,7 +83,7 @@ docker compose up -d
 
 ### Custom domains and HTTPS
 
-Point an `A` record at your server's IP, then add the domain to the app (e.g. `https://app.example.com`). The certificate is issued automatically on the next deploy. You can list several domains, separated by commas. Prefix a domain with `http://` to serve it without TLS.
+Point an `A` record (and `AAAA` for IPv6) at your server's IP, then add the domain to the app (e.g. `https://app.example.com`) and redeploy. Traefik requests a free [Let's Encrypt](https://letsencrypt.org) certificate with the HTTP-01 challenge, renews it automatically and redirects HTTP to HTTPS. Ports 80 and 443 must be reachable from the internet, and if you use Cloudflare, set the record to *DNS only* (grey cloud) until the certificate is issued. You can list several domains, separated by commas. Prefix a domain with `http://` to serve it without TLS.
 
 To give every new app a domain automatically, create a wildcard record `*.apps.example.com → your IP` and set **Settings → Wildcard domain** to `apps.example.com`.
 
@@ -92,7 +101,7 @@ Each app has a **Git & webhooks** tab with ready-to-paste webhook URLs and a sec
 | Bitbucket | `/webhooks/bitbucket/<app-id>?secret=…` | in the URL |
 | Any CI | `/webhooks/deploy/<app-id>?secret=…` | in the URL |
 
-Enable **preview deployments** for an app to get a URL for each pull request.
+Enable **preview deployments** for an app to get a URL for each pull request. For safety, pull requests opened from forks are never built: on a public repository that would run a stranger's code on your server with your app's environment variables.
 
 ### Health checks and rollbacks
 
@@ -178,9 +187,25 @@ The dashboard is plain HTML/CSS/JS in `web/static`, embedded into the binary. Th
 
 Contributions are welcome. Open an issue or a pull request.
 
+## ❓ FAQ
+
+**Is SelfDeploy free?** Yes. It is open source under the MIT license. You only pay for your server.
+
+**How is it different from Heroku, Vercel, Netlify or Render?** It runs on a server you control, so there are no per-app fees or usage limits, and your code and data stay with you.
+
+**How does it compare to Coolify, Dokku or CapRover?** Same idea, with a focus on being small: one Go binary, SQLite, no Node build step and about 20 MB of RAM, with a mail server and S3 backups included.
+
+**What server do I need?** Ubuntu or Debian with 1 GB of RAM (2 GB+ recommended) and ports 80/443 open. The installer installs Docker if needed.
+
+**Does SSL work with my own domain?** Yes. Every domain gets a free Let's Encrypt certificate that renews automatically. Temporary `sslip.io` URLs are served over plain HTTP because Let's Encrypt rate limits those shared domains.
+
+**Do wildcard domains get a wildcard certificate?** No. Each app subdomain gets its own certificate via HTTP-01, so no DNS API keys are needed.
+
 ## 📄 License
 
-[MIT](LICENSE)
+SelfDeploy is [MIT](LICENSE) licensed: you can use it for personal and commercial projects, modify it and redistribute it.
+
+SelfDeploy does not bundle third-party apps. It pulls their official Docker images on your server when you use them, and each keeps its own license, including [Traefik](https://github.com/traefik/traefik) (MIT), [docker-mailserver](https://github.com/docker-mailserver/docker-mailserver) (MIT), [Nixpacks](https://github.com/railwayapp/nixpacks) (MIT) and the one-click apps. Most are permissive or copyleft (GPL/AGPL) and fine for running your own apps. A few are source-available, for example [n8n](https://docs.n8n.io/sustainable-use-license/) (Sustainable Use License), MongoDB (SSPL) and recent Redis versions, and restrict offering them *as a hosted service to others*. Check those licenses if you resell hosting.
 
 ---
 
