@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/99proteam/selfdeploy/internal/docker"
@@ -69,10 +68,8 @@ func LocalMetrics(dataDir string) Metrics {
 			m.MemUsed = m.MemTotal - avail
 		}
 	}
-	var st syscall.Statfs_t
-	if err := syscall.Statfs(dataDir, &st); err == nil {
-		m.DiskTotal = st.Blocks * uint64(st.Bsize)
-		m.DiskUsed = m.DiskTotal - st.Bavail*uint64(st.Bsize)
+	if total, used, ok := diskUsage(dataDir); ok {
+		m.DiskTotal, m.DiskUsed = total, used
 	}
 	return m
 }

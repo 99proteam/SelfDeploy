@@ -1,0 +1,4 @@
+# Keep LF everywhere: install.sh is piped straight into bash.
+* text=auto eol=lf
+*.png binary
+*.ico binary

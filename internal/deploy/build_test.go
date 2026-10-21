@@ -22,8 +22,8 @@ func TestAuthURL(t *testing.T) {
 }
 
 func TestSafeJoin(t *testing.T) {
-	root := "/tmp/build"
-	if p, err := safeJoin(root, "apps/web"); err != nil || p != "/tmp/build/apps/web" {
+	root := filepath.Join(t.TempDir(), "build")
+	if p, err := safeJoin(root, "apps/web"); err != nil || p != filepath.Join(root, "apps", "web") {
 		t.Errorf("subdir: %s %v", p, err)
 	}
 	if p, err := safeJoin(root, "../../etc"); err != nil || !strings.HasPrefix(p, root) {
@@ -73,5 +73,14 @@ func TestPreviewTarget(t *testing.T) {
 	}
 	if !hasPreviewPrefix("web-pr12", "web") || hasPreviewPrefix("web-pro", "web") || hasPreviewPrefix("web", "web") {
 		t.Error("hasPreviewPrefix")
+	}
+}
+
+func TestDotenvQuote(t *testing.T) {
+	cases := map[string]string{"pa$word": "'pa$word'", "": "''", "it's": `"it's"`, "a\nb": `"a\nb"`}
+	for in, want := range cases {
+		if got := dotenvQuote(in); got != want {
+			t.Errorf("dotenvQuote(%q) = %s, want %s", in, got, want)
+		}
 	}
 }

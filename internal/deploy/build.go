@@ -9,7 +9,9 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/99proteam/selfdeploy/internal/docker"
@@ -214,7 +216,8 @@ func writeStaticDockerfile(base string, app *store.App) error {
 	if err := os.WriteFile(filepath.Join(base, ".dockerignore"), ignore, 0o644); err != nil {
 		return err
 	}
-	publish := filepath.Clean("/" + app.PublishDir)
+	// A path inside the image, so always slash-separated.
+	publish := path.Clean("/" + app.PublishDir)
 	var df string
 	if app.BuildCommand == "" {
 		if app.PublishDir == "" || app.PublishDir == "dist" && !exists(filepath.Join(base, "dist")) {
@@ -226,7 +229,7 @@ func writeStaticDockerfile(base string, app *store.App) error {
 		if install == "" {
 			install = "if [ -f package-lock.json ]; then npm ci; elif [ -f pnpm-lock.yaml ]; then corepack enable && pnpm i --frozen-lockfile; elif [ -f yarn.lock ]; then corepack enable && yarn install --frozen-lockfile; else npm install; fi"
 		}
-		df = "FROM node:20-alpine AS build\nWORKDIR /app\nCOPY . .\nRUN " + install + "\nRUN " + app.BuildCommand +
+		df = "FROM node:22-alpine AS build\nWORKDIR /app\nCOPY . .\nRUN " + install + "\nRUN " + app.BuildCommand +
 			"\nFROM nginx:alpine\nCOPY --from=build /app" + publish + " /usr/share/nginx/html\n"
 	}
 	df += "COPY .selfdeploy-nginx.conf /etc/nginx/conf.d/default.conf\nEXPOSE 80\n"
@@ -272,8 +275,9 @@ func (e *Engine) deployCompose(ctx context.Context, w io.Writer, c *docker.Clien
 	var dotenv strings.Builder
 	for _, kv := range env {
 		k, v, _ := strings.Cut(kv, "=")
-		envMap[k] = v
-		fmt.Fprintf(&dotenv, "%s=%q\n", k, v)
+		// Compose interpolates $VAR in compose files; $$ is a literal dollar.
+		envMap[k] = strings.ReplaceAll(v, "$", "$$")
+		fmt.Fprintf(&dotenv, "%s=%s\n", k, dotenvQuote(v))
 	}
 	if err := os.WriteFile(filepath.Join(projectDir, ".env"), []byte(dotenv.String()), 0o600); err != nil {
 		return err
@@ -298,6 +302,16 @@ func (e *Engine) deployCompose(ctx context.Context, w io.Writer, c *docker.Clien
 	fmt.Fprintf(w, "Running docker compose up for %s...\n", file)
 	return c.StreamIn(ctx, w, projectDir, "compose", "-p", t.name, "-f", composeFile, "-f", overrideFile,
 		"up", "-d", "--build", "--remove-orphans", "--pull", "missing")
+}
+
+// dotenvQuote quotes a value for a compose .env file. Single-quoted values are
+// taken literally, so passwords containing $ survive; values that cannot be
+// single-quoted fall back to double quotes with escapes.
+func dotenvQuote(v string) string {
+	if !strings.ContainsAny(v, "'\n\r") {
+		return "'" + v + "'"
+	}
+	return strconv.Quote(v)
 }
 
 // syncDir replaces dst with src.

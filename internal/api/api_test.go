@@ -204,7 +204,7 @@ func TestGitHubWebhook(t *testing.T) {
 		t.Fatalf("other branch: %d", code)
 	}
 	// Pull requests only deploy previews when enabled.
-	pr := []byte(`{"action":"opened","number":7,"pull_request":{"title":"t","head":{"sha":"fff"},"base":{"ref":"main"}}}`)
+	pr := []byte(`{"action":"opened","number":7,"pull_request":{"title":"t","head":{"sha":"fff","repo":{"full_name":"example/web"}},"base":{"ref":"main","repo":{"full_name":"example/web"}}}}`)
 	send(pr, hmacHex(secret, pr), "pull_request")
 	if deps, _ := s.Store.Deployments(id, 10); len(deps) != 1 {
 		t.Fatalf("preview deployed while disabled")
@@ -217,6 +217,12 @@ func TestGitHubWebhook(t *testing.T) {
 	if len(deps) != 2 || deps[0].PRNumber != 7 || deps[0].GitRef != "refs/pull/7/head" {
 		t.Fatalf("preview not queued: %+v", deps[0])
 	}
+	// Pull requests from forks never run on the server.
+	fork := []byte(`{"action":"opened","number":8,"pull_request":{"title":"t","head":{"sha":"eee","repo":{"full_name":"stranger/web"}},"base":{"ref":"main","repo":{"full_name":"example/web"}}}}`)
+	send(fork, hmacHex(secret, fork), "pull_request")
+	if deps, _ := s.Store.Deployments(id, 10); len(deps) != 2 {
+		t.Fatalf("fork PR was deployed: %+v", deps[0])
+	}
 }
 
 func TestParseGitLabAndBitbucket(t *testing.T) {
@@ -227,6 +233,10 @@ func TestParseGitLabAndBitbucket(t *testing.T) {
 	ev, _ = parseGitLab("Merge Request Hook", []byte(`{"object_attributes":{"iid":3,"action":"merge","target_branch":"main"}}`))
 	if ev.kind != "pr_close" || ev.pr != 3 {
 		t.Fatalf("gitlab mr: %+v", ev)
+	}
+	ev, _ = parseGitLab("Merge Request Hook", []byte(`{"object_attributes":{"iid":4,"action":"open","target_branch":"main","source_project_id":9,"target_project_id":1}}`))
+	if ev.kind != "pr_open" || !ev.fork {
+		t.Fatalf("gitlab fork mr: %+v", ev)
 	}
 	ev, _ = parseBitbucket("repo:push", []byte(`{"push":{"changes":[{"new":{"type":"branch","name":"main","target":{"hash":"bbb","message":"m"}}}]}}`))
 	if ev.kind != "push" || ev.branch != "main" || ev.sha != "bbb" {

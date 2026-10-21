@@ -938,7 +938,7 @@ route(/^\/settings(?:\/(\w+))?$/, async ([tab = '']) => {
     page(`${head}${tabs}${settingsForm(`
       ${field('Dashboard domain', input('instance_domain', s.instance_domain, 'placeholder="https://deploy.example.com"'), 'Serve this dashboard on your own domain with HTTPS. Point an A record at this server first.')}
       ${field('Wildcard domain for new resources', input('wildcard_domain', s.wildcard_domain, 'placeholder="apps.example.com"'), 'With a <code>*.apps.example.com</code> DNS record, new apps get <code>https://name.apps.example.com</code>. Empty = free <b>sslip.io</b> temporary domains.')}
-      ${field("Let's Encrypt email", input('acme_email', s.acme_email, 'type="email" placeholder="you@example.com"'), 'Used for certificate expiry notices.')}
+      ${field("Let's Encrypt email", input('acme_email', s.acme_email, 'type="email" placeholder="you@example.com"'), 'Optional ACME account contact. Certificates renew automatically.')}
       <div class="row" style="margin-bottom:14px"><span class="muted small">Theme:</span><button type="button" class="sm" data-theme="light">Light</button><button type="button" class="sm" data-theme="dark">Dark</button><button type="button" class="sm" data-theme="">System</button></div>`)}`, (root) => {
       saveSettings(root);
       root.querySelectorAll('[data-theme]').forEach((b) => b.addEventListener('click', () => setTheme(b.dataset.theme)));

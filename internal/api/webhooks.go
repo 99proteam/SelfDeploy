@@ -25,6 +25,7 @@ type gitEvent struct {
 	message string
 	pr      int
 	prRef   string
+	fork    bool // the PR comes from another repository
 }
 
 func hmacHex(secret string, body []byte) string {
@@ -141,6 +142,12 @@ func (s *Server) handleGitEvent(w http.ResponseWriter, app *store.App, ev gitEve
 			reply("ignored: preview deployments are off or the PR targets another branch")
 			return
 		}
+		// Anyone can open a PR from a fork of a public repo. Building it would run
+		// a stranger's code on this server with the app's environment variables.
+		if ev.fork {
+			reply("ignored: preview deployments are not built for pull requests from forks")
+			return
+		}
 		d, err := s.Deploy.Enqueue(app, deploy.Options{Trigger: "preview", PRNumber: ev.pr, GitRef: ev.prRef,
 			CommitSHA: ev.sha, CommitMessage: ev.message})
 		if err != nil {
@@ -156,6 +163,10 @@ func (s *Server) handleGitEvent(w http.ResponseWriter, app *store.App, ev gitEve
 	default:
 		reply("ignored event")
 	}
+}
+
+type ghRepo struct {
+	FullName string `json:"full_name"`
 }
 
 // parseGitHub reads GitHub and Gitea/Forgejo payloads, which share a format.
@@ -185,10 +196,12 @@ func parseGitHub(event string, body []byte, prRef string) (gitEvent, error) {
 			PullRequest struct {
 				Title string `json:"title"`
 				Head  struct {
-					SHA string `json:"sha"`
+					SHA  string  `json:"sha"`
+					Repo *ghRepo `json:"repo"`
 				} `json:"head"`
 				Base struct {
-					Ref string `json:"ref"`
+					Ref  string  `json:"ref"`
+					Repo *ghRepo `json:"repo"`
 				} `json:"base"`
 			} `json:"pull_request"`
 		}
@@ -197,6 +210,9 @@ func parseGitHub(event string, body []byte, prRef string) (gitEvent, error) {
 		}
 		ev := gitEvent{branch: p.PullRequest.Base.Ref, pr: p.Number, sha: p.PullRequest.Head.SHA,
 			message: p.PullRequest.Title, prRef: fmt.Sprintf(prRef, p.Number)}
+		// A deleted fork has no head repo; treat it as a fork too.
+		head, base := p.PullRequest.Head.Repo, p.PullRequest.Base.Repo
+		ev.fork = head == nil || base == nil || head.FullName != base.FullName
 		switch p.Action {
 		case "opened", "reopened", "synchronize", "synchronized":
 			ev.kind = "pr_open"
@@ -234,11 +250,13 @@ func parseGitLab(event string, body []byte) (gitEvent, error) {
 	case "Merge Request Hook":
 		var p struct {
 			Attrs struct {
-				IID          int    `json:"iid"`
-				Action       string `json:"action"`
-				Title        string `json:"title"`
-				TargetBranch string `json:"target_branch"`
-				LastCommit   struct {
+				IID             int    `json:"iid"`
+				SourceProjectID int    `json:"source_project_id"`
+				TargetProjectID int    `json:"target_project_id"`
+				Action          string `json:"action"`
+				Title           string `json:"title"`
+				TargetBranch    string `json:"target_branch"`
+				LastCommit      struct {
 					ID string `json:"id"`
 				} `json:"last_commit"`
 			} `json:"object_attributes"`
@@ -248,7 +266,7 @@ func parseGitLab(event string, body []byte) (gitEvent, error) {
 		}
 		a := p.Attrs
 		ev := gitEvent{branch: a.TargetBranch, pr: a.IID, sha: a.LastCommit.ID, message: a.Title,
-			prRef: fmt.Sprintf("refs/merge-requests/%d/head", a.IID)}
+			prRef: fmt.Sprintf("refs/merge-requests/%d/head", a.IID), fork: a.SourceProjectID != a.TargetProjectID}
 		switch a.Action {
 		case "open", "reopen", "update":
 			ev.kind = "pr_open"

@@ -6,7 +6,7 @@ COPY . .
 ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w -X main.version=${VERSION}" -o /out/selfdeploy ./cmd/selfdeploy
 
-FROM alpine:3.20
+FROM alpine:3.22
 RUN apk add --no-cache docker-cli docker-cli-compose docker-cli-buildx git openssh-client ca-certificates tzdata curl
 # Nixpacks builds apps without a Dockerfile (Node, Python, Go, PHP, Ruby, Rust, Java ...).
 ARG TARGETARCH
