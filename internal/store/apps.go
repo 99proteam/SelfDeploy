@@ -109,6 +109,7 @@ func (s *Store) CreateServer(v *Server) error {
 		return err
 	}
 	v.ID, _ = res.LastInsertId()
+	v.CreatedAt = time.Now().UTC().Truncate(time.Second)
 	return nil
 }
 
@@ -160,6 +161,7 @@ func (s *Store) CreateProject(p *Project) error {
 		return err
 	}
 	p.ID, _ = res.LastInsertId()
+	p.CreatedAt = time.Now().UTC().Truncate(time.Second)
 	return nil
 }
 
@@ -228,6 +230,7 @@ func (s *Store) CreateApp(a *App) error {
 		return err
 	}
 	a.ID, _ = res.LastInsertId()
+	a.CreatedAt = time.Now().UTC().Truncate(time.Second)
 	return nil
 }
 
@@ -354,6 +357,7 @@ func (s *Store) CreateDeployment(d *Deployment) error {
 		return err
 	}
 	d.ID, _ = res.LastInsertId()
+	d.CreatedAt = time.Now().UTC().Truncate(time.Second)
 	d.Status = "queued"
 	return nil
 }

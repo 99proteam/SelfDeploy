@@ -11,6 +11,16 @@
 </p>
 
 <p align="center">
+  <a href="https://buymeacoffee.com/99proteam"><img src="docs/badges/sponsor-banner.svg" alt="Buy me a coffee – support SelfDeploy at buymeacoffee.com/99proteam" width="100%"></a>
+</p>
+
+<p align="center">
+  <a href="https://buymeacoffee.com/99proteam"><img src="https://img.shields.io/badge/☕_Buy_me_a_coffee-Support-FFDD00?style=for-the-badge&labelColor=0d0c22" alt="Buy me a coffee"></a>
+  <a href="https://99proteam.github.io/SelfDeploy/"><img src="https://img.shields.io/badge/🌐_Website-Open-2a78d6?style=for-the-badge" alt="Website"></a>
+  <a href="https://github.com/99proteam/SelfDeploy"><img src="https://img.shields.io/github/stars/99proteam/SelfDeploy?style=for-the-badge&logo=github" alt="GitHub stars"></a>
+</p>
+
+<p align="center">
   <a href="https://github.com/99proteam/SelfDeploy/actions/workflows/ci.yml"><img src="https://github.com/99proteam/SelfDeploy/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/99proteam/SelfDeploy" alt="MIT license"></a>
   <a href="https://github.com/99proteam/SelfDeploy/pkgs/container/selfdeploy"><img src="https://img.shields.io/badge/docker-ghcr.io%2F99proteam%2Fselfdeploy-2496ED?logo=docker&logoColor=white" alt="Docker image"></a>
@@ -24,10 +34,19 @@
   <a href="#-deploying-apps">Deploying apps</a> ·
   <a href="#-email-server">Email server</a> ·
   <a href="#-api">API</a> ·
-  <a href="#-faq">FAQ</a>
+  <a href="#-faq">FAQ</a> ·
+  <a href="https://buymeacoffee.com/99proteam">☕ Sponsor</a>
 </p>
 
 ---
+
+> [!TIP]
+> ### ☕ Support SelfDeploy
+> SelfDeploy is **100% free and open source**. If it saves you hosting bills or time, please consider supporting its development:
+>
+> <a href="https://buymeacoffee.com/99proteam"><img src="docs/badges/buy-me-a-coffee.svg" alt="Buy me a coffee" height="48"></a>
+>
+> **[buymeacoffee.com/99proteam](https://buymeacoffee.com/99proteam)**. Every coffee funds new features, fixes and updates. ⭐ Starring the repo helps too!
 
 SelfDeploy turns any Linux VPS into your own Platform-as-a-Service. Push to Git and your app is built, deployed with zero downtime and served over HTTPS. You can also run PostgreSQL, MySQL, MongoDB and Redis with scheduled backups, host email for your domains, and launch WordPress, Ghost, n8n and more in one click. It ships as a single Go binary in one Docker container.
 

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="236" height="60" viewBox="0 0 236 60" role="img" aria-label="Buy me a coffee">
+  <title>Buy me a coffee</title>
+  <rect x="1" y="1" width="234" height="58" rx="12" fill="#FFDD00" stroke="#0d0c22" stroke-width="2"/>
+  <g transform="translate(22 15)" fill="none" stroke="#0d0c22" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M2 10h20v11a8 8 0 0 1-8 8H10a8 8 0 0 1-8-8V10z" fill="#ffffff"/>
+    <path d="M22 13h2.5a4 4 0 0 1 0 8H22"/>
+    <path d="M8 1.5c0 2 2 2 2 4M13 1.5c0 2 2 2 2 4"/>
+  </g>
+  <text x="62" y="38" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="20" font-weight="700" fill="#0d0c22">Buy me a coffee</text>
+</svg>

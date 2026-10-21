@@ -95,6 +95,7 @@ func (s *Store) CreateDatabase(d *Database) error {
 		return err
 	}
 	d.ID, _ = res.LastInsertId()
+	d.CreatedAt = time.Now().UTC().Truncate(time.Second)
 	return nil
 }
 
@@ -202,6 +203,7 @@ func (s *Store) CreateService(v *Service) error {
 		return err
 	}
 	v.ID, _ = res.LastInsertId()
+	v.CreatedAt = time.Now().UTC().Truncate(time.Second)
 	return nil
 }
 

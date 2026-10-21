@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="230" viewBox="0 0 1000 230" role="img" aria-label="Buy me a coffee – SelfDeploy is free forever. Support it at buymeacoffee.com/99proteam">
+  <title>Buy me a coffee – support SelfDeploy</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE84D"/>
+      <stop offset="1" stop-color="#FFDD00"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="994" height="224" rx="28" fill="url(#bg)" stroke="#0d0c22" stroke-width="5"/>
+
+  <!-- Cup icon + title, centered as one group -->
+  <g transform="translate(233 34)" fill="none" stroke="#0d0c22" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 26h52v30a20 20 0 0 1-20 20H24A20 20 0 0 1 4 56V26z" fill="#ffffff"/>
+    <path d="M56 34h7a10 10 0 0 1 0 20h-7"/>
+    <path d="M19 4c0 5 5 5 5 10M33 4c0 5 5 5 5 10"/>
+  </g>
+  <text x="323" y="98" textLength="440" lengthAdjust="spacingAndGlyphs" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="56" font-weight="800" fill="#0d0c22">Buy me a coffee</text>
+
+  <text x="500" y="146" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="500" fill="#0d0c22">SelfDeploy is free forever. Your support keeps it growing ❤</text>
+
+  <rect x="310" y="166" width="380" height="42" rx="21" fill="#0d0c22"/>
+  <text x="500" y="194" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFDD00">buymeacoffee.com/99proteam</text>
+</svg>
