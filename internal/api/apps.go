@@ -105,8 +105,7 @@ func applyBasicAuth(a *store.App, password, prevHash string) error {
 		a.BasicAuthHash = ""
 		return nil
 	}
-	if strings.ContainsAny(a.BasicAuthUser, ": 	
-,") || len(a.BasicAuthUser) > 64 {
+	if strings.ContainsAny(a.BasicAuthUser, ": \t\n,") || len(a.BasicAuthUser) > 64 {
 		return invalid("username must not contain spaces, commas or colons")
 	}
 	if password == "" {
