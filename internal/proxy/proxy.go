@@ -25,6 +25,7 @@ const (
 	TraefikImage   = "traefik:v3.6"
 	configLabel    = "selfdeploy.config"
 	redirectSuffix = "-https-redirect"
+	authSuffix     = "-auth"
 )
 
 // DynamicDir is a host directory mounted into Traefik for file-based routes
@@ -167,9 +168,21 @@ func GenerateDomain(name, wildcard, ip string) string {
 	return "http://" + name + "." + strings.ReplaceAll(ip, ":", "-") + ".sslip.io"
 }
 
+// Options are optional per-app routing settings.
+type Options struct {
+	// BasicAuth is "user:bcrypt-hash". When set, visitors must sign in with
+	// HTTP basic auth before reaching the app.
+	BasicAuth string
+}
+
 // Labels returns the docker labels that make Traefik route the domains to
 // the container's port, with automatic certificates and an HTTP->HTTPS redirect.
 func Labels(name string, port int, domains []Domain) []string {
+	return LabelsWith(name, port, domains, Options{})
+}
+
+// LabelsWith is Labels with extra middlewares, such as password protection.
+func LabelsWith(name string, port int, domains []Domain, opts Options) []string {
 	if len(domains) == 0 {
 		return nil
 	}
@@ -179,6 +192,13 @@ func Labels(name string, port int, domains []Domain) []string {
 		fmt.Sprintf("traefik.http.services.%s.loadbalancer.server.port=%d", name, port),
 		fmt.Sprintf("traefik.http.middlewares.%s%s.redirectscheme.scheme=https", name, redirectSuffix),
 		fmt.Sprintf("traefik.http.middlewares.%s%s.redirectscheme.permanent=true", name, redirectSuffix),
+	}
+	var middlewares []string
+	if opts.BasicAuth != "" {
+		labels = append(labels,
+			fmt.Sprintf("traefik.http.middlewares.%s%s.basicauth.users=%s", name, authSuffix, opts.BasicAuth),
+			fmt.Sprintf("traefik.http.middlewares.%s%s.basicauth.realm=%s", name, authSuffix, name))
+		middlewares = append(middlewares, name+authSuffix)
 	}
 	for i, d := range domains {
 		r := fmt.Sprintf("traefik.http.routers.%s-%d", name, i)
@@ -201,6 +221,9 @@ func Labels(name string, port int, domains []Domain) []string {
 				r+".entrypoints=web",
 				r+".service="+name,
 			)
+		}
+		if len(middlewares) > 0 {
+			labels = append(labels, r+".middlewares="+strings.Join(middlewares, ","))
 		}
 	}
 	return labels

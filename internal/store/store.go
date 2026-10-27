@@ -196,6 +196,8 @@ var migrations = []string{
 		events TEXT NOT NULL DEFAULT 'deploy_success,deploy_failed,backup_failed',
 		enabled INTEGER NOT NULL DEFAULT 1
 	);`,
+	`ALTER TABLE apps ADD COLUMN basic_auth_user TEXT NOT NULL DEFAULT '';
+	ALTER TABLE apps ADD COLUMN basic_auth_hash TEXT NOT NULL DEFAULT '';`,
 }
 
 func (s *Store) migrate() error {

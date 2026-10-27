@@ -414,6 +414,12 @@ function appForm(a, projects, servers, isNew) {
       ${field('Memory limit', input('memory_limit', a.memory_limit, 'placeholder="e.g. 512m (optional)"'))}
       ${field('CPU limit', input('cpu_limit', a.cpu_limit, 'placeholder="e.g. 1.5 (optional)"'))}
     </div>
+    <h3 style="margin-top:8px">Password protection</h3>
+    <p class="muted small">Ask visitors for a username and password before they reach the app. Handy for staging sites and previews. Leave the username empty to keep the app public.</p>
+    <div class="grid cols-2">
+      ${field('Username', input('basic_auth_user', a.basic_auth_user, 'placeholder="optional" autocomplete="off"'))}
+      ${field('Password', input('basic_auth_password', '', `type="password" placeholder="${a.password_protected ? '•••••• saved, leave empty to keep' : 'at least 8 characters'}" autocomplete="new-password"`))}
+    </div>
     ${isNew ? `<label class="check"><input type="checkbox" name="deploy" checked> Deploy right away</label>` : `
       <label class="check"><input type="checkbox" name="auto_deploy" ${a.auto_deploy ? 'checked' : ''}> Auto deploy on git push (webhook)</label>
       <label class="check"><input type="checkbox" name="preview_deploys" ${a.preview_deploys ? 'checked' : ''}> Preview deployments for pull requests (pr&lt;N&gt;.your-domain)</label>`}
@@ -458,6 +464,7 @@ route(/^\/apps\/(\d+)(?:\/(\w+))?$/, async ([id, tab = '']) => {
     <button class="primary" id="deploy">Deploy</button>
     <button id="restart">Restart</button>
     ${a.status === 'stopped' ? '<button id="start">Start</button>' : '<button id="stop">Stop</button>'}
+    <button id="clone">Clone</button>
     <button class="danger" id="delete">Delete</button>`);
   const actions = (root) => {
     bind(root, '#deploy', async () => {
@@ -467,6 +474,24 @@ route(/^\/apps\/(\d+)(?:\/(\w+))?$/, async ([id, tab = '']) => {
     for (const act of ['restart', 'stop', 'start']) {
       bind(root, '#' + act, async () => { await api('POST', `/api/apps/${id}/${act}`); toast(`${act} done`); render(); });
     }
+    bind(root, '#clone', () => {
+      const m = modal(`<h2>Clone ${esc(a.name)}</h2>
+        <p class="muted small">Copies the build settings and environment variables into a new app with its own domain and webhook secret. Useful for staging copies.</p>
+        <form id="clone-form">${field('Name', input('name', a.name + ' copy', 'required'))}
+          ${field('Project', `<select name="project_id" id="clone-project"><option value="${a.project_id}">Same project</option></select>`)}
+          <label class="check"><input type="checkbox" name="deploy" checked> Deploy right away</label>
+          <div class="row" style="justify-content:flex-end;margin-top:12px"><button type="button" data-close>Cancel</button><button class="primary" type="submit">Clone app</button></div></form>`);
+      api('GET', '/api/projects').then((ps) => {
+        const sel = m.querySelector('#clone-project');
+        sel.innerHTML = ps.map((p) => `<option value="${p.id}" ${p.id === a.project_id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+      }).catch(() => {});
+      onSubmit(m.querySelector('#clone-form'), async (d) => {
+        const res = await api('POST', `/api/apps/${id}/clone`, d);
+        m.close();
+        toast(d.deploy ? 'App cloned, deployment started' : 'App cloned');
+        location.hash = '#/apps/' + res.app.id;
+      });
+    });
     bind(root, '#delete', async () => {
       const r = await confirmDanger(`Delete <b>${esc(a.name)}</b>, its containers and images?`,
         '<label class="check"><input type="checkbox" name="volumes"> Also delete its volumes (data)</label>');
@@ -488,6 +513,7 @@ route(/^\/apps\/(\d+)(?:\/(\w+))?$/, async ([id, tab = '']) => {
         <tr><td class="muted">Internal host</td><td class="mono">${esc(a.slug)}:${a.port}</td></tr>
         <tr><td class="muted">Current image</td><td class="mono break">${esc(a.current_image || '–')}</td></tr>
         <tr><td class="muted">Auto deploy</td><td>${a.auto_deploy ? 'On' : 'Off'}${a.preview_deploys ? ' · PR previews on' : ''}</td></tr>
+        <tr><td class="muted">Access</td><td>${v.password_protected ? `🔒 Password protected (user <b>${esc(a.basic_auth_user)}</b>)` : 'Public'}</td></tr>
       </table></div></div>
       <div class="card"><h2>Latest deployments</h2>${deploymentTable(deps, false)}</div>`, (root) => {
       actions(root);
@@ -496,7 +522,7 @@ route(/^\/apps\/(\d+)(?:\/(\w+))?$/, async ([id, tab = '']) => {
     });
   } else if (tab === 'config') {
     const [projects, servers] = await Promise.all([api('GET', '/api/projects'), serverOptions()]);
-    page(`${head}${tabs}<div class="card">${appForm({ ...a, has_git_token: v.has_git_token }, projects, servers, false)}</div>`, (root) => {
+    page(`${head}${tabs}<div class="card">${appForm({ ...a, has_git_token: v.has_git_token, password_protected: v.password_protected }, projects, servers, false)}</div>`, (root) => {
       actions(root);
       onSubmit(mountAppForm(root), async (d) => {
         d.project_id = Number(d.project_id);

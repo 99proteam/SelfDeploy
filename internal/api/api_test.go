@@ -291,3 +291,74 @@ func TestDashboardFallback(t *testing.T) {
 		t.Fatalf("unknown API path: %d", resp.StatusCode)
 	}
 }
+
+func TestPasswordProtection(t *testing.T) {
+	c, s := newTestServer(t)
+	a := setupApp(t, c, map[string]any{"name": "staging", "git_url": "https://github.com/example/web.git"})
+	id := int64(a["id"].(float64))
+	path := fmt.Sprintf("/api/apps/%d", id)
+
+	a["basic_auth_user"] = "team"
+	if code, _ := c.do("PUT", path, a); code != 400 {
+		t.Fatalf("protection enabled without a password: %d", code)
+	}
+	a["basic_auth_password"] = "short"
+	if code, _ := c.do("PUT", path, a); code != 400 {
+		t.Fatalf("short password accepted: %d", code)
+	}
+	a["basic_auth_password"] = "correct horse"
+	code, out := c.do("PUT", path, a)
+	if code != 200 || out["password_protected"] != true {
+		t.Fatalf("enable protection: %d %v", code, out)
+	}
+	stored, _ := s.Store.App(id)
+	if !strings.HasPrefix(stored.BasicAuth(), "team:$2") {
+		t.Fatalf("expected a bcrypt hash, got %q", stored.BasicAuth())
+	}
+	if strings.Contains(fmt.Sprint(out), stored.BasicAuthHash) {
+		t.Fatal("password hash returned to the client")
+	}
+	// Saving the form again without a password keeps the stored hash.
+	delete(a, "basic_auth_password")
+	c.do("PUT", path, a)
+	if again, _ := s.Store.App(id); again.BasicAuthHash != stored.BasicAuthHash {
+		t.Fatal("hash lost on update")
+	}
+	// Clearing the username turns protection off.
+	a["basic_auth_user"] = ""
+	if _, out := c.do("PUT", path, a); out["password_protected"] != false {
+		t.Fatalf("protection not removed: %v", out)
+	}
+}
+
+func TestCloneApp(t *testing.T) {
+	c, s := newTestServer(t)
+	a := setupApp(t, c, map[string]any{"name": "web", "git_url": "https://github.com/example/web.git",
+		"git_token": "ghp_secret", "build_command": "npm run build", "port": 8080})
+	id := int64(a["id"].(float64))
+	s.Store.ReplaceEnvVars(id, []*store.EnvVar{{Key: "NODE_ENV", Value: "production", IsBuild: true}})
+
+	code, out := c.do("POST", fmt.Sprintf("/api/apps/%d/clone", id), map[string]any{"name": "web staging"})
+	if code != 201 {
+		t.Fatalf("clone: %d %v", code, out)
+	}
+	cp := out["app"].(map[string]any)
+	cid := int64(cp["id"].(float64))
+	if cid == id || cp["slug"] != "web-staging" || cp["webhook_secret"] == a["webhook_secret"] {
+		t.Fatalf("clone must get its own identity: %v", cp)
+	}
+	if cp["domains"] != "http://web-staging.203.0.113.7.sslip.io" || cp["build_command"] != "npm run build" || cp["port"] != float64(8080) {
+		t.Fatalf("unexpected clone settings: %v", cp)
+	}
+	if stored, _ := s.Store.App(cid); stored.GitToken != "ghp_secret" {
+		t.Fatal("git token not copied")
+	}
+	vars, _ := s.Store.EnvVars(cid)
+	if len(vars) != 1 || vars[0].Key != "NODE_ENV" || !vars[0].IsBuild {
+		t.Fatalf("env vars not copied: %+v", vars)
+	}
+	// Without a name the copy is called "<name> copy".
+	if _, out := c.do("POST", fmt.Sprintf("/api/apps/%d/clone", id), map[string]any{}); out["app"].(map[string]any)["name"] != "web copy" {
+		t.Fatalf("default clone name: %v", out)
+	}
+}

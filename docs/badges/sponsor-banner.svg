@@ -1,23 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="230" viewBox="0 0 1000 230" role="img" aria-label="Buy me a coffee – SelfDeploy is free forever. Support it at buymeacoffee.com/99proteam">
-  <title>Buy me a coffee – support SelfDeploy</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="230" viewBox="0 0 1000 230" role="img" aria-label="Sponsor SelfDeploy on GitHub Sponsors – help us reach $5,000 a month at github.com/sponsors/99proteam">
+  <title>Sponsor SelfDeploy on GitHub</title>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FFE84D"/>
-      <stop offset="1" stop-color="#FFDD00"/>
+      <stop offset="0" stop-color="#1b1f2a"/>
+      <stop offset="1" stop-color="#0d1117"/>
     </linearGradient>
   </defs>
-  <rect x="3" y="3" width="994" height="224" rx="28" fill="url(#bg)" stroke="#0d0c22" stroke-width="5"/>
+  <rect x="3" y="3" width="994" height="224" rx="28" fill="url(#bg)" stroke="#db61a2" stroke-width="5"/>
 
-  <!-- Cup icon + title, centered as one group -->
-  <g transform="translate(233 34)" fill="none" stroke="#0d0c22" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M4 26h52v30a20 20 0 0 1-20 20H24A20 20 0 0 1 4 56V26z" fill="#ffffff"/>
-    <path d="M56 34h7a10 10 0 0 1 0 20h-7"/>
-    <path d="M19 4c0 5 5 5 5 10M33 4c0 5 5 5 5 10"/>
-  </g>
-  <text x="323" y="98" textLength="440" lengthAdjust="spacingAndGlyphs" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="56" font-weight="800" fill="#0d0c22">Buy me a coffee</text>
+  <!-- Heart icon + title, centered as one group -->
+  <path transform="translate(222 26) scale(3)" d="M14 20.408c-.492.308-.903.546-1.192.709-.153.086-.308.17-.463.252h-.002a.75.75 0 0 1-.686 0 16.709 16.709 0 0 1-.465-.252 31.147 31.147 0 0 1-4.803-3.34C3.8 15.572 1 12.331 1 8.513 1 5.052 3.829 2.5 6.736 2.5 9.03 2.5 10.881 3.726 12 5.605 13.12 3.726 14.97 2.5 17.264 2.5 20.17 2.5 23 5.052 23 8.514c0 3.818-2.801 7.06-5.389 9.262A31.146 31.146 0 0 1 14 20.408Z" fill="#db61a2"/>
+  <text x="310" y="96" textLength="470" lengthAdjust="spacingAndGlyphs" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="56" font-weight="800" fill="#ffffff">Sponsor on GitHub</text>
 
-  <text x="500" y="146" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="500" fill="#0d0c22">SelfDeploy is free forever. Your support keeps it growing ❤</text>
+  <text x="500" y="146" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="25" font-weight="500" fill="#c9d1d9">SelfDeploy is free forever. Help us reach $5,000/month ❤</text>
 
-  <rect x="310" y="166" width="380" height="42" rx="21" fill="#0d0c22"/>
-  <text x="500" y="194" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="700" fill="#FFDD00">buymeacoffee.com/99proteam</text>
+  <rect x="300" y="166" width="400" height="42" rx="21" fill="#db61a2"/>
+  <text x="500" y="194" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="21" font-weight="700" fill="#ffffff">github.com/sponsors/99proteam</text>
 </svg>

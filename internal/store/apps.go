@@ -52,9 +52,20 @@ type App struct {
 	AutoDeploy     bool      `json:"auto_deploy"`
 	PreviewDeploys bool      `json:"preview_deploys"`
 	WebhookSecret  string    `json:"webhook_secret"`
+	BasicAuthUser  string    `json:"basic_auth_user"`
+	BasicAuthHash  string    `json:"-"` // bcrypt hash, never sent to clients
 	Status         string    `json:"status"`
 	CurrentImage   string    `json:"current_image"`
 	CreatedAt      time.Time `json:"created_at"`
+}
+
+// BasicAuth returns the "user:hash" pair for the proxy, or "" when the app
+// is not password protected.
+func (a *App) BasicAuth() string {
+	if a.BasicAuthUser == "" || a.BasicAuthHash == "" {
+		return ""
+	}
+	return a.BasicAuthUser + ":" + a.BasicAuthHash
 }
 
 // DomainList returns the configured domains with blanks removed.
@@ -204,14 +215,15 @@ func (s *Store) DeleteProject(id int64) error {
 const appCols = `id, project_id, server_id, name, slug, source_type, git_url, git_branch, git_token, build_pack,
 	base_dir, dockerfile_path, compose_path, compose_service, publish_dir, install_command, build_command,
 	start_command, image, port, domains, health_path, memory_limit, cpu_limit, auto_deploy, preview_deploys,
-	webhook_secret, status, current_image, created_at`
+	webhook_secret, basic_auth_user, basic_auth_hash, status, current_image, created_at`
 
 func scanApp(sc interface{ Scan(...any) error }) (*App, error) {
 	a := &App{}
 	err := sc.Scan(&a.ID, &a.ProjectID, &a.ServerID, &a.Name, &a.Slug, &a.SourceType, &a.GitURL, &a.GitBranch,
 		&a.GitToken, &a.BuildPack, &a.BaseDir, &a.DockerfilePath, &a.ComposePath, &a.ComposeService, &a.PublishDir,
 		&a.InstallCommand, &a.BuildCommand, &a.StartCommand, &a.Image, &a.Port, &a.Domains, &a.HealthPath,
-		&a.MemoryLimit, &a.CPULimit, &a.AutoDeploy, &a.PreviewDeploys, &a.WebhookSecret, &a.Status,
+		&a.MemoryLimit, &a.CPULimit, &a.AutoDeploy, &a.PreviewDeploys, &a.WebhookSecret, &a.BasicAuthUser,
+		&a.BasicAuthHash, &a.Status,
 		&a.CurrentImage, &a.CreatedAt)
 	return a, notFound(err)
 }
@@ -220,12 +232,12 @@ func (s *Store) CreateApp(a *App) error {
 	res, err := s.DB.Exec(`INSERT INTO apps (project_id, server_id, name, slug, source_type, git_url, git_branch,
 		git_token, build_pack, base_dir, dockerfile_path, compose_path, compose_service, publish_dir,
 		install_command, build_command, start_command, image, port, domains, health_path, memory_limit,
-		cpu_limit, auto_deploy, preview_deploys, webhook_secret)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		cpu_limit, auto_deploy, preview_deploys, webhook_secret, basic_auth_user, basic_auth_hash)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		a.ProjectID, a.ServerID, a.Name, a.Slug, a.SourceType, a.GitURL, a.GitBranch, a.GitToken, a.BuildPack,
 		a.BaseDir, a.DockerfilePath, a.ComposePath, a.ComposeService, a.PublishDir, a.InstallCommand,
 		a.BuildCommand, a.StartCommand, a.Image, a.Port, a.Domains, a.HealthPath, a.MemoryLimit, a.CPULimit,
-		b2i(a.AutoDeploy), b2i(a.PreviewDeploys), a.WebhookSecret)
+		b2i(a.AutoDeploy), b2i(a.PreviewDeploys), a.WebhookSecret, a.BasicAuthUser, a.BasicAuthHash)
 	if err != nil {
 		return err
 	}
@@ -240,11 +252,11 @@ func (s *Store) UpdateApp(a *App) error {
 		git_branch = ?, git_token = ?, build_pack = ?, base_dir = ?, dockerfile_path = ?, compose_path = ?,
 		compose_service = ?, publish_dir = ?, install_command = ?, build_command = ?, start_command = ?, image = ?,
 		port = ?, domains = ?, health_path = ?, memory_limit = ?, cpu_limit = ?, auto_deploy = ?,
-		preview_deploys = ? WHERE id = ?`,
+		preview_deploys = ?, basic_auth_user = ?, basic_auth_hash = ? WHERE id = ?`,
 		a.ProjectID, a.ServerID, a.Name, a.SourceType, a.GitURL, a.GitBranch, a.GitToken, a.BuildPack, a.BaseDir,
 		a.DockerfilePath, a.ComposePath, a.ComposeService, a.PublishDir, a.InstallCommand, a.BuildCommand,
 		a.StartCommand, a.Image, a.Port, a.Domains, a.HealthPath, a.MemoryLimit, a.CPULimit, b2i(a.AutoDeploy),
-		b2i(a.PreviewDeploys), a.ID)
+		b2i(a.PreviewDeploys), a.BasicAuthUser, a.BasicAuthHash, a.ID)
 	return err
 }
 

@@ -11,6 +11,7 @@ import (
 	"github.com/99proteam/selfdeploy/internal/deploy"
 	"github.com/99proteam/selfdeploy/internal/proxy"
 	"github.com/99proteam/selfdeploy/internal/store"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -96,6 +97,36 @@ func (s *Server) normalizeApp(a *store.App) error {
 	return nil
 }
 
+// applyBasicAuth sets the app's password protection. An empty user turns it
+// off; an empty password keeps the previously stored hash.
+func applyBasicAuth(a *store.App, password, prevHash string) error {
+	a.BasicAuthUser = strings.TrimSpace(a.BasicAuthUser)
+	if a.BasicAuthUser == "" {
+		a.BasicAuthHash = ""
+		return nil
+	}
+	if strings.ContainsAny(a.BasicAuthUser, ": 	
+,") || len(a.BasicAuthUser) > 64 {
+		return invalid("username must not contain spaces, commas or colons")
+	}
+	if password == "" {
+		if prevHash == "" {
+			return invalid("set a password to enable password protection")
+		}
+		a.BasicAuthHash = prevHash
+		return nil
+	}
+	if len(password) < 8 {
+		return invalid("the protection password must be at least 8 characters")
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	a.BasicAuthHash = string(hash)
+	return nil
+}
+
 func randomSecret() string {
 	b := make([]byte, 20)
 	rand.Read(b)
@@ -118,8 +149,9 @@ func (s *Server) appView(r *http.Request, a *store.App) map[string]any {
 	a.GitToken = ""
 	base := s.baseURL(r)
 	return map[string]any{
-		"app":           a,
-		"has_git_token": hasToken,
+		"app":                a,
+		"has_git_token":      hasToken,
+		"password_protected": a.BasicAuth() != "",
 		"webhooks": map[string]string{
 			"github":    fmt.Sprintf("%s/webhooks/github/%d", base, a.ID),
 			"gitlab":    fmt.Sprintf("%s/webhooks/gitlab/%d", base, a.ID),
@@ -159,7 +191,8 @@ func (s *Server) listApps(w http.ResponseWriter, r *http.Request) {
 func (s *Server) createApp(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		store.App
-		Deploy bool `json:"deploy"`
+		BasicAuthPassword string `json:"basic_auth_password"`
+		Deploy            bool   `json:"deploy"`
 	}
 	if err := decode(r, &body); err != nil {
 		fail(w, err)
@@ -167,6 +200,10 @@ func (s *Server) createApp(w http.ResponseWriter, r *http.Request) {
 	}
 	a := &body.App
 	if err := s.normalizeApp(a); err != nil {
+		fail(w, err)
+		return
+	}
+	if err := applyBasicAuth(a, body.BasicAuthPassword, ""); err != nil {
 		fail(w, err)
 		return
 	}
@@ -216,7 +253,8 @@ func (s *Server) updateApp(w http.ResponseWriter, r *http.Request) {
 	}
 	var body struct {
 		store.App
-		ClearGitToken bool `json:"clear_git_token"`
+		ClearGitToken     bool   `json:"clear_git_token"`
+		BasicAuthPassword string `json:"basic_auth_password"`
 	}
 	if err := decode(r, &body); err != nil {
 		fail(w, err)
@@ -232,12 +270,76 @@ func (s *Server) updateApp(w http.ResponseWriter, r *http.Request) {
 		fail(w, err)
 		return
 	}
+	if err := applyBasicAuth(&upd, body.BasicAuthPassword, a.BasicAuthHash); err != nil {
+		fail(w, err)
+		return
+	}
 	if err := s.Store.UpdateApp(&upd); err != nil {
 		fail(w, err)
 		return
 	}
 	fresh, _ := s.Store.App(a.ID)
 	writeJSON(w, http.StatusOK, s.appView(r, fresh))
+}
+
+// cloneApp copies an app's build settings and environment variables into a
+// new app. The copy gets its own slug, webhook secret and default domain, so
+// it can run next to the original (e.g. as a staging copy).
+func (s *Server) cloneApp(w http.ResponseWriter, r *http.Request) {
+	src := s.loadApp(w, r)
+	if src == nil {
+		return
+	}
+	var body struct {
+		Name      string `json:"name"`
+		ProjectID int64  `json:"project_id"`
+		Deploy    bool   `json:"deploy"`
+	}
+	if err := decode(r, &body); err != nil {
+		fail(w, err)
+		return
+	}
+	vars, err := s.Store.EnvVars(src.ID)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	a := *src
+	a.ID, a.Status, a.CurrentImage, a.Domains = 0, "", "", ""
+	a.Name = strings.TrimSpace(body.Name)
+	if a.Name == "" {
+		a.Name = src.Name + " copy"
+	}
+	if body.ProjectID != 0 {
+		a.ProjectID = body.ProjectID
+	}
+	if err := s.normalizeApp(&a); err != nil {
+		fail(w, err)
+		return
+	}
+	a.Slug = s.slugFor(a.Name)
+	a.WebhookSecret = randomSecret()
+	a.Domains = s.defaultDomain(a.Slug, a.ServerID)
+	if err := s.Store.CreateApp(&a); err != nil {
+		fail(w, err)
+		return
+	}
+	copies := make([]*store.EnvVar, 0, len(vars))
+	for _, v := range vars {
+		copies = append(copies, &store.EnvVar{AppID: a.ID, Key: v.Key, Value: v.Value, IsBuild: v.IsBuild})
+	}
+	if err := s.Store.ReplaceEnvVars(a.ID, copies); err != nil {
+		fail(w, err)
+		return
+	}
+	if body.Deploy {
+		if _, err := s.Deploy.Enqueue(&a, deploy.Options{Trigger: "manual"}); err != nil {
+			fail(w, err)
+			return
+		}
+	}
+	fresh, _ := s.Store.App(a.ID)
+	writeJSON(w, http.StatusCreated, s.appView(r, fresh))
 }
 
 func (s *Server) deleteApp(w http.ResponseWriter, r *http.Request) {

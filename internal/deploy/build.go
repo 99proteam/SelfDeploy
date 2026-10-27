@@ -284,7 +284,11 @@ func (e *Engine) deployCompose(ctx context.Context, w io.Writer, c *docker.Clien
 	}
 	override := map[string]any{"networks": map[string]any{proxy.Network: map[string]any{"external": true}}}
 	if app.ComposeService != "" {
-		labels := proxy.Labels(t.name, app.Port, t.domains)
+		var labels []string
+		for _, l := range proxy.LabelsWith(t.name, app.Port, t.domains, t.opts) {
+			// bcrypt hashes in basic auth labels contain $, which compose would interpolate.
+			labels = append(labels, strings.ReplaceAll(l, "$", "$$"))
+		}
 		labels = append(labels, labelApp+"="+t.name, "selfdeploy.managed=true")
 		override["services"] = map[string]any{app.ComposeService: map[string]any{
 			"labels":      labels,

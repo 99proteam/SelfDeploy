@@ -102,6 +102,7 @@ func (s *Server) Handler() http.Handler {
 	a("PUT /api/apps/{id}", s.updateApp)
 	a("DELETE /api/apps/{id}", s.deleteApp)
 	a("POST /api/apps/{id}/deploy", s.deployApp)
+	a("POST /api/apps/{id}/clone", s.cloneApp)
 	a("POST /api/apps/{id}/{action}", s.appAction)
 	a("GET /api/apps/{id}/logs", s.appLogs)
 	a("GET /api/apps/{id}/env", s.getEnv)

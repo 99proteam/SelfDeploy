@@ -11,10 +11,11 @@
 </p>
 
 <p align="center">
-  <a href="https://buymeacoffee.com/99proteam"><img src="docs/badges/sponsor-banner.svg" alt="Buy me a coffee – support SelfDeploy at buymeacoffee.com/99proteam" width="100%"></a>
+  <a href="https://github.com/sponsors/99proteam"><img src="docs/badges/sponsor-banner.svg" alt="Sponsor SelfDeploy on GitHub Sponsors – help us reach $5,000/month at github.com/sponsors/99proteam" width="100%"></a>
 </p>
 
 <p align="center">
+  <a href="https://github.com/sponsors/99proteam"><img src="https://img.shields.io/badge/💖_Sponsor_on_GitHub-Goal_$5k%2Fmonth-db61a2?style=for-the-badge&logo=githubsponsors&logoColor=white&labelColor=0d1117" alt="Sponsor on GitHub"></a>
   <a href="https://buymeacoffee.com/99proteam"><img src="https://img.shields.io/badge/☕_Buy_me_a_coffee-Support-FFDD00?style=for-the-badge&labelColor=0d0c22" alt="Buy me a coffee"></a>
   <a href="https://99proteam.github.io/SelfDeploy/"><img src="https://img.shields.io/badge/🌐_Website-Open-2a78d6?style=for-the-badge" alt="Website"></a>
   <a href="https://github.com/99proteam/SelfDeploy"><img src="https://img.shields.io/github/stars/99proteam/SelfDeploy?style=for-the-badge&logo=github" alt="GitHub stars"></a>
@@ -35,18 +36,18 @@
   <a href="#-email-server">Email server</a> ·
   <a href="#-api">API</a> ·
   <a href="#-faq">FAQ</a> ·
-  <a href="https://buymeacoffee.com/99proteam">☕ Sponsor</a>
+  <a href="https://github.com/sponsors/99proteam">💖 Sponsor</a>
 </p>
 
 ---
 
 > [!TIP]
-> ### ☕ Support SelfDeploy
-> SelfDeploy is **100% free and open source**. If it saves you hosting bills or time, please consider supporting its development:
+> ### 💖 Sponsor SelfDeploy
+> SelfDeploy is **100% free and open source**. If it saves you hosting bills or time, please become a sponsor on **GitHub Sponsors**. Our goal is **$5,000 a month** so SelfDeploy can be maintained full time.
 >
-> <a href="https://buymeacoffee.com/99proteam"><img src="docs/badges/buy-me-a-coffee.svg" alt="Buy me a coffee" height="48"></a>
+> <a href="https://github.com/sponsors/99proteam"><img src="docs/badges/github-sponsors.svg" alt="Sponsor on GitHub" height="48"></a> <a href="https://buymeacoffee.com/99proteam"><img src="docs/badges/buy-me-a-coffee.svg" alt="Buy me a coffee" height="48"></a>
 >
-> **[buymeacoffee.com/99proteam](https://buymeacoffee.com/99proteam)**. Every coffee funds new features, fixes and updates. ⭐ Starring the repo helps too!
+> **[github.com/sponsors/99proteam](https://github.com/sponsors/99proteam)** (monthly or one-time). You can also [buy me a coffee](https://buymeacoffee.com/99proteam). Every sponsor funds new features, fixes and updates. ⭐ Starring the repo helps too!
 
 SelfDeploy turns any Linux VPS into your own Platform-as-a-Service. Push to Git and your app is built, deployed with zero downtime and served over HTTPS. You can also run PostgreSQL, MySQL, MongoDB and Redis with scheduled backups, host email for your domains, and launch WordPress, Ghost, n8n and more in one click. It ships as a single Go binary in one Docker container.
 
@@ -78,6 +79,8 @@ docker compose up -d
 | **Automatic SSL** | Free Let's Encrypt certificates for every domain, issued and renewed automatically, with HTTP→HTTPS redirects. |
 | **Temporary domains** | Every app gets a working URL instantly (`app.203.0.113.7.sslip.io`), with no DNS setup. |
 | **Custom & wildcard domains** | Multiple domains per app. Set a wildcard domain once and new apps get `name.apps.example.com`. |
+| **Password protection** | Put any app behind a username and password (HTTP basic auth at the proxy), ideal for staging sites and PR previews. |
+| **Clone apps** | Copy an app's build settings and environment variables into a new app with its own domain in one click, e.g. for a staging copy. |
 | **Zero-downtime deploys** | The new version starts next to the old one and must pass its health check before traffic switches. |
 | **One-click rollback** | Every build is kept as an image; roll back to any previous deployment in seconds. |
 | **Preview deployments** | Each pull/merge request gets its own URL (`pr12.app.example.com`), removed automatically when it closes. |
@@ -159,7 +162,7 @@ curl -X POST -H "Authorization: Bearer $SELFDEPLOY_TOKEN" https://deploy.example
 curl -H "Authorization: Bearer $SELFDEPLOY_TOKEN" https://deploy.example.com/api/apps
 ```
 
-Main endpoints: `/api/projects`, `/api/apps`, `/api/apps/{id}/deploy|stop|start|restart|logs|env|deployments`, `/api/deployments/{id}/rollback`, `/api/databases`, `/api/databases/{id}/backup`, `/api/services`, `/api/templates`, `/api/mail`, `/api/servers`, `/api/notifications`.
+Main endpoints: `/api/projects`, `/api/apps`, `/api/apps/{id}/deploy|stop|start|restart|clone|logs|env|deployments`, `/api/deployments/{id}/rollback`, `/api/databases`, `/api/databases/{id}/backup`, `/api/services`, `/api/templates`, `/api/mail`, `/api/servers`, `/api/notifications`.
 
 ## ⚙️ Configuration
 

@@ -103,6 +103,7 @@ type target struct {
 	name    string
 	domains []proxy.Domain
 	preview bool
+	opts    proxy.Options
 }
 
 func (e *Engine) targetFor(app *store.App, pr int) (target, error) {
@@ -110,10 +111,11 @@ func (e *Engine) targetFor(app *store.App, pr int) (target, error) {
 	if err != nil {
 		return target{}, err
 	}
+	opts := proxy.Options{BasicAuth: app.BasicAuth()}
 	if pr == 0 {
-		return target{name: app.Slug, domains: domains}, nil
+		return target{name: app.Slug, domains: domains, opts: opts}, nil
 	}
-	t := target{name: fmt.Sprintf("%s-pr%d", app.Slug, pr), preview: true}
+	t := target{name: fmt.Sprintf("%s-pr%d", app.Slug, pr), preview: true, opts: opts}
 	for _, d := range domains {
 		t.domains = append(t.domains, proxy.Domain{Host: fmt.Sprintf("pr%d.%s", pr, d.Host), HTTPS: d.HTTPS})
 	}
@@ -297,7 +299,7 @@ func (e *Engine) rollout(ctx context.Context, w io.Writer, c *docker.Client, app
 	for _, kv := range env {
 		args = append(args, "-e", kv)
 	}
-	for _, l := range proxy.Labels(t.name, port, t.domains) {
+	for _, l := range proxy.LabelsWith(t.name, port, t.domains, t.opts) {
 		args = append(args, "--label", l)
 	}
 	if app.SourceType == "image" && app.StartCommand != "" {

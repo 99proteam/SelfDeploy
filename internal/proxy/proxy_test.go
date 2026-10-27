@@ -72,3 +72,22 @@ func TestLabels(t *testing.T) {
 		t.Error("no domains should mean no labels")
 	}
 }
+
+func TestLabelsWithBasicAuth(t *testing.T) {
+	doms := []Domain{{Host: "example.com", HTTPS: true}, {Host: "x.1.2.3.4.sslip.io"}}
+	labels := strings.Join(LabelsWith("web", 3000, doms, Options{BasicAuth: "team:$2a$10$hash"}), "\n")
+	for _, want := range []string{
+		"traefik.http.middlewares.web-auth.basicauth.users=team:$2a$10$hash",
+		"traefik.http.routers.web-0.middlewares=web-auth",
+		"traefik.http.routers.web-1.middlewares=web-auth",
+		// The HTTP router of an HTTPS domain only redirects; auth happens after the redirect.
+		"traefik.http.routers.web-0-http.middlewares=web-https-redirect",
+	} {
+		if !strings.Contains(labels, want) {
+			t.Errorf("labels missing %q:\n%s", want, labels)
+		}
+	}
+	if plain := strings.Join(Labels("web", 3000, doms), "\n"); strings.Contains(plain, "basicauth") {
+		t.Error("auth middleware added without options")
+	}
+}
